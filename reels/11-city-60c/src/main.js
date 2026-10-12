@@ -567,27 +567,31 @@ function drawRain(t, k){
   ctx.beginPath(); for (let i = 0; i < 520 * k; i++){ const x = r() * W * 1.2 - 60, y = r() * H, l = 40 + r() * 70; ctx.moveTo(x, y); ctx.lineTo(x - l * .18, y + l); } ctx.stroke(); ctx.restore();
 }
 
-// the 3D picture onto the 2D canvas: warm grade, then heat shimmer as wobbling horizontal slices
+// the 3D picture onto the 2D canvas: warm grade, then heat shimmer as wobbling horizontal slices.
+// The WebGL canvas is read ONCE per frame (into a 2D scratch canvas, with the grade); the slices are cut
+// from that copy. Reading the WebGL canvas once per slice made the GPU process run out of memory on
+// Windows/D3D (v1 crashed after ~300 frames on the Radeon 610M).
+const pic = document.createElement('canvas'); pic.width = W; pic.height = H;
+const pctx = pic.getContext('2d', { alpha: false });
 function drawPicture(t){
   const hk = SHIM.heat, st = SHIM.storm;
-  ctx.save(); ctx.fillStyle = '#000'; ctx.fillRect(0, 0, W, H); ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
   const f = [];
-  if (hk > .01) f.push(`sepia(${(.42 * hk).toFixed(3)})`, `saturate(${(1 + .18 * hk).toFixed(3)})`, `brightness(${(1 + .1 * hk).toFixed(3)})`, `contrast(${(1 - .12 * hk).toFixed(3)})`);
-  if (st > .01) f.push(`saturate(${(1 - .35 * st).toFixed(3)})`, `brightness(${(1 - .12 * st).toFixed(3)})`);
-  ctx.filter = f.length ? f.join(' ') : 'none';
-  ctx.drawImage(glc, 0, 0, W, H);
+  if (hk > .01) f.push(`sepia(${(.42 * hk).toFixed(2)})`, `saturate(${(1 + .18 * hk).toFixed(2)})`, `brightness(${(1 + .1 * hk).toFixed(2)})`, `contrast(${(1 - .12 * hk).toFixed(2)})`);
+  if (st > .01) f.push(`saturate(${(1 - .35 * st).toFixed(2)})`, `brightness(${(1 - .12 * st).toFixed(2)})`);
+  pctx.filter = f.length ? f.join(' ') : 'none'; pctx.imageSmoothingEnabled = true; pctx.imageSmoothingQuality = 'high';
+  pctx.drawImage(glc, 0, 0, W, H); pctx.filter = 'none';
+  ctx.save(); ctx.drawImage(pic, 0, 0);
   if (hk > .02){
     // shimmer: strongest across the far street, around mid-frame
-    const S = 4, gh = glc.height / H;
+    const S = 6;
     for (let y = Math.floor(H * .25); y < H * .72; y += S){
       const band = Math.exp(-Math.pow((y / H - .47) / .13, 2));
       // smooth, slowly rising waves (no slice-to-slice jumps)
       const off = Math.sin(y * .045 - t * 5.3) * .6 + Math.sin(y * .017 + t * 2.1) * .4 + (noise1(y * .02 - t * 1.7) - .5) * .8;
-      const dx = off * 3.2 * hk * band; if (Math.abs(dx) < .25) continue;
-      ctx.drawImage(glc, 0, y * gh, glc.width, S * gh + 1, dx, y, W, S + 1);
+      const dx = Math.round(off * 3.2 * hk * band * 2) / 2; if (Math.abs(dx) < .5) continue;
+      ctx.drawImage(pic, 0, y, W, S, dx, y, W, S);
     }
   }
-  ctx.filter = 'none';
   // haze veil and storm tint
   if (hk > .01){ const g = ctx.createLinearGradient(0, H * .2, 0, H * .7); g.addColorStop(0, `rgba(250,232,196,${.24 * hk})`); g.addColorStop(1, `rgba(250,228,190,${.06 * hk})`); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); }
   if (st > .01){ ctx.globalCompositeOperation = 'multiply'; ctx.fillStyle = `rgba(150,165,185,${.6 * st})`; ctx.fillRect(0, 0, W, H); ctx.globalCompositeOperation = 'source-over'; }

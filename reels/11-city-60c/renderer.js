@@ -95,7 +95,7 @@ async function renderAll(){
       while (venc.encodeQueueSize > 6) await yieldNow();
       if (n % 10 === 0 || n === NF - 1){ const el = (performance.now() - t0) / 1e3, per = el / (n + 1);
         $('bar').style.width = ((n + 1) / NF * 100).toFixed(1) + '%'; say('Drawing frame ' + (n + 1).toLocaleString() + ' of ' + NF.toLocaleString() + '  ·  ' + (per * 1e3).toFixed(0) + ' ms a frame  ·  about ' + fmt(per * (NF - n - 1)) + ' left'); await yieldNow(); }
-      if (n === 300) log({ msPerFrameAt300: Math.round((performance.now() - t0) / 301) });
+      if (n && n % 300 === 0) log({ lastFrame: n, msPerFrameSoFar: Math.round((performance.now() - t0) / (n + 1)), jsHeapMB: performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1048576) : null });
     }
     say('Finishing the video…'); await venc.flush(); venc.close(); if (verr) throw verr;
     let aN = 0; if (feed) try { aN = feed.upTo(muxer, Infinity); } catch (e){ aErr = String(e && e.message || e); }
