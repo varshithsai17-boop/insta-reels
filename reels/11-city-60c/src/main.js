@@ -331,23 +331,133 @@ const elmo = hero('elmo', { jacket: '#d4231c', shirt: '#d4231c', pants: '#d4231c
   eh.position.set(0, .06, 0); elmo.userData.head.add(eh); elmo.userData.elmoHead = eh; elmo.userData.face.visible = false; }
 flushStatic();
 
+// ---------- 60 → 100 °C set pieces ----------
+const HOT = {};
+// street trees in planters (they scorch and drop their leaves)
+HOT.trees = [[-3.7, -15.5, 1], [6.9, -19.5, .9], [-3.5, -25, 1.1]].map(([x, z, s], i) => {
+  const g = new THREE.Group(); g.position.set(x, .14, z); g.scale.setScalar(s); scene.add(g);
+  mesh(box(1.5, .7, 1.5), STD('#5c5650', .85), 0, .35, 0, g, 3);
+  mesh(cyl(.09, .13, 2.6, 8), STD('#4a3a2c', .9), 0, 1.95, 0, g, 1);
+  const leafMat = STD('#4f7a3a', .9);
+  const blobs = [[0, 3.6, 0, 1.0], [.55, 3.2, .2, .7], [-.5, 3.3, -.15, .75], [.1, 4.2, -.1, .7], [-.15, 3.0, .45, .6]].map(([bx, by, bz, r]) => { const m = mesh(new THREE.IcosahedronGeometry(r, 1), leafMat, bx, by, bz, g, 1); return m; });
+  const leaves = Array.from({ length: 40 }, (_, k) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(.12, .08), STD('#7a5a2e', .9, { side: THREE.DoubleSide })); m.visible = false; scene.add(m); return { m, r: hash(i * 50 + k), r2: hash(i * 31 + k * 3), r3: hash(i * 7 + k * 11) }; });
+  return { g, leafMat, blobs, leaves, x, z, s };
+});
+// e-bike dock on the plaza (batteries fail and burn)
+HOT.bikes = [];
+{ const blue = STD('#1f5fa8', .6), dark = STD('#1a1b1e', .7), batt = STD('#2a2c30', .6);
+  mesh(box(.5, .08, 5.4), STD('#3a3c40', .7), 1.9, .18, -16.6, scene, 2);
+  for (let i = 0; i < 6; i++){
+    const g = new THREE.Group(); g.position.set(1.9, .14, -14.6 - i * .82); g.rotation.y = .32 + .05 * (i % 2); scene.add(g);
+    for (const wx of [-.55, .55]) mesh(new THREE.TorusGeometry(.32, .035, 8, 20), dark, wx, .34, 0, g, 1);
+    const f1 = mesh(cyl(.035, .035, 1.15, 8), blue, 0, .62, 0, g, 1); f1.rotation.z = Math.PI / 2;
+    const f2 = mesh(cyl(.035, .035, .6, 8), blue, -.22, .55, 0, g, 1); f2.rotation.z = .5;
+    mesh(box(.32, .14, .12), batt, .05, .68, 0, g, 1);
+    mesh(box(.24, .06, .1), dark, -.32, .92, 0, g, 1);
+    mesh(box(.28, .2, .32), blue, .62, .78, 0, g, 1);
+    mesh(cyl(.02, .02, .6, 6), dark, .5, 1.0, 0, g, 1).rotation.x = Math.PI / 2;
+    HOT.bikes.push({ g, mats: [blue], t0: 0, x: 1.9, z: -14.6 - i * .82 });
+  }
+  HOT.bikeBlue = blue;
+}
+// propane tank beside the hot-dog cart
+HOT.tank = new THREE.Group(); HOT.tank.position.set(CART.x - 1.15, .14, CART.z + .05); scene.add(HOT.tank);
+mesh(cyl(.16, .16, .55, 16), STD('#d8d4ca', .5), 0, .38, 0, HOT.tank, 3); mesh(sph(.16, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2), STD('#d8d4ca', .5), 0, .655, 0, HOT.tank, 1);
+mesh(cyl(.03, .03, .08, 8), STD('#9a9a9a', .4, { metalness: .5 }), 0, .85, 0, HOT.tank, 1);
+// traffic signals at the crosswalk (they shut off)
+HOT.signals = [];
+{ const pole = STD('#2e3034', .55), headM = STD('#1d1e20', .6);
+  sbox(.2, 6.6, .2, pole, ROAD_R + .2, 3.3, -14.2); sbox(11.5, .18, .18, pole, ROAD_R + .2 - 5.75, 6.4, -14.2);
+  for (const [x, y] of [[ROAD_R + .2, 4.6], [-8.4, 5.6], [-13.2, 5.6]]){
+    const g = new THREE.Group(); g.position.set(x, y, -14.0); scene.add(g); mesh(rbox(.5, 1.35, .36, .05), headM, 0, 0, 0, g, 1);
+    const L = ['#ff3324', '#ffb81c', '#28e07a'].map((c, k) => { const m = mesh(new THREE.CircleGeometry(.15, 18), BASIC(c), 0, .42 - k * .42, .19, g); return { m, c }; });
+    HOT.signals.push(L);
+  } }
+flushStatic();
+// traffic cones on the road (left behind by the ambulance) and the bottles on the cooler sag
+HOT.cones = [[-6.4, -14.5], [-6.9, -16.8], [-6.5, -19.1]].map(([x, z]) => { const g = new THREE.Group(); g.position.set(x, 0, z); scene.add(g); mesh(new THREE.ConeGeometry(.17, .7, 16), STD('#f26a1b', .7), 0, .41, 0, g, 1); mesh(box(.42, .06, .42), STD('#1a1a1a', .8), 0, .03, 0, g, 1); mesh(cyl(.105, .135, .1, 16, true), STD('#e8e6e0', .6), 0, .4, 0, g); return g; });
+// sprinkler water pouring out of building doorways, a stream down the gutter, puddles
+const waterTex = canvasTex(64, 256, (g, w, h) => { const r = rng(5); g.fillStyle = 'rgba(95,130,160,.6)'; g.fillRect(0, 0, w, h); for (let i = 0; i < 90; i++){ g.fillStyle = `rgba(235,245,255,${.4 + r() * .5})`; g.fillRect(r() * w, r() * h, 1 + r() * 2, 10 + r() * 40); } });
+waterTex.wrapS = waterTex.wrapT = THREE.RepeatWrapping;
+HOT.falls = [[-FAC + .45, -96, 1, 9], [-FAC + .45, -128, 1, 8], [FAC - .45, -90, -1, 9], [FAC - .45, -121, -1, 8]].map(([x, z, sgn, w]) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, 4.6), new THREE.MeshBasicMaterial({ map: waterTex.clone(), transparent: true, opacity: 0, depthWrite: false, fog: false })); m.material.map.needsUpdate = true; m.material.map.repeat.set(w / 1.6, 1); m.position.set(x, 2.45, z); m.rotation.y = sgn * Math.PI / 2; scene.add(m); return m; });
+const puddleMat = new THREE.MeshBasicMaterial({ color: '#dfe7ec', transparent: true, opacity: 0, depthWrite: false });
+HOT.puddles = [[-21, -110, 9, 50], [21.5, -104, 8, 44], [-4.5, -60, 1.2, 104], [-17.6, -66, 1.2, 104], [-1.1, -11.2, 4.6, 5.4], [1.4, -9.6, 2.2, 2.6], [-2.6, -15.5, 2.6, 3.2], [-11, -88, 12, 30]].map(([x, z, w, d]) => { const g = new THREE.CircleGeometry(.5, 28); g.rotateX(-Math.PI / 2); g.scale(w, 1, d); const m = mesh(g, puddleMat.clone(), x, (x < -4 && x > -18) ? .03 : .165, z, scene); m.userData.full = [w, d]; return m; });
+const FIRE = puffSet(60, '#ffffff'); FIRE.forEach(p => { p.s.material.blending = THREE.AdditiveBlending; p.s.material.map = softTex; });
+const SMOKE = puffSet(50, '#2f2c2a');
+const VENT = puffSet(16, '#f2f2f0');
+const BALL = puffSet(30, '#ffffff'); BALL.forEach(p => { p.s.material.blending = THREE.AdditiveBlending; p.s.material.map = softTex; });
+const fireLight = new THREE.PointLight(0xff8a3a, 0, 30, 2); fireLight.position.set(1.9, 2.0, -16.6); scene.add(fireLight);
+const cartLight = new THREE.PointLight(0xff9a40, 0, 30, 2); cartLight.position.set(CART.x - 1, 2.2, CART.z); scene.add(cartLight);
+const FIRE_COLS = ['#ffd27a', '#ff9a3a', '#ff6a1e', '#ffb84a'];
+
+function updateHot(t){
+  const back = t > B.return + .4;
+  const live = k => back ? 0 : k;
+  // trees scorch, leaves fall
+  const sc = live(after(t, B.leaves, 4));
+  HOT.trees.forEach((tr, i) => {
+    tr.leafMat.color.set('#4f7a3a').lerp(col('#8a6a34'), sc).lerp(col('#5a4632'), sc * sc * .5);
+    tr.blobs.forEach((b, k) => b.scale.setScalar(1 - .45 * sc * (.6 + .4 * hash(k + i))));
+    tr.leaves.forEach(L => { const age = (t - B.leaves - L.r * 5) / (2.5 + L.r2 * 2); L.m.visible = !back && age > 0 && age < 1 && t < B.leaves + 12;
+      if (!L.m.visible) return; const sx = tr.x + (L.r2 - .5) * 2.4 * tr.s + Math.sin(age * 9 + L.r * 20) * .3, sz = tr.z + (L.r3 - .5) * 2.4 * tr.s, y = lerp(3.6 * tr.s, .2, age);
+      L.m.position.set(sx, y, sz); L.m.rotation.set(age * 7 + L.r * 6, age * 5, age * 3); });
+  });
+  // sprinklers: water pours out of the doorways, puddles spread (they shrink later but never boil)
+  const sp = live(after(t, B.sprinklers, 1.2));
+  HOT.falls.forEach((m, i) => { m.material.opacity = .85 * sp * (1 - .5 * after(t, B.tar, 15)); m.material.map.offset.y = -t * 1.6 + i * .3; m.visible = m.material.opacity > .01; });
+  HOT.puddles.forEach((m, i) => { const grow = live(after(t, B.puddles + [0, .3, .9, 1.2, 2.4, 3.0, 3.5, 1.6][i], 4)), shrink = 1 - .35 * after(t, B.tar, 18); m.material.opacity = grow * (.5 + .08 * Math.sin(t * 3 + i)); m.scale.set(Math.max(.01, grow * shrink), 1, Math.max(.01, grow * (i === 2 || i === 3 ? 1 : shrink))); m.visible = grow > .01; m.material.color.copy(skyU.hor.value).lerp(col('#9fb4c4'), .35); });
+  // propane tank vents (white jet), later the fire reaches it: fireball
+  const vent = live(after(t, B.propane, .4)) * (t < B.fireball ? 1 : 0);
+  VENT.forEach(p => { const age = ((t - B.propane) * 1.6 + p.r) % 1; p.s.visible = vent > .01; if (!p.s.visible) return; p.s.position.set(HOT.tank.position.x - .1 - age * 1.2, .95 + age * 1.6 + p.r2 * .2, HOT.tank.position.z + (p.r3 - .5) * .3); p.s.scale.setScalar(.25 + age * 1.6); p.s.material.opacity = vent * (1 - age) * .5; });
+  const fb = (t - B.fireball) / 1.6, fbOn = !back && fb > 0 && fb < 1;
+  BALL.forEach((p, i) => { p.s.visible = fbOn; if (!fbOn) return; const k = fb, r = Math.pow(k, .45) * (2.5 + p.r * 3.5); const a = p.r2 * Math.PI * 2, e = p.r3 * 1.2;
+    p.s.position.set(CART.x - 1 + Math.cos(a) * r * .6, 1.2 + Math.sin(e) * r * .7 + k * 2.5, CART.z + Math.sin(a) * r * .5); p.s.scale.setScalar(2.5 + r * 1.4); p.s.material.color.set(k < .25 ? '#fff2c8' : FIRE_COLS[i % 4]); p.s.material.opacity = (1 - k) * .38; });
+  cartLight.intensity = !back && t > B.fireball ? (fb < 1 ? 220 * (1 - fb) + 14 : 12 + 6 * noise1(t * 9)) : 0;
+  const burnt = !back && t > B.fireball + .15;
+  umbrella.visible = !burnt; HOT.tank.visible = !burnt; cartBody.color.set(burnt ? '#2a2624' : '#c9ccd0');
+  // traffic signals: cycle, flicker at 74 °C, then go dark
+  const sigOff = t > B.signals + 1.4 && !back, flick = t > B.signals && t <= B.signals + 1.4 && !back;
+  const phase = Math.floor((t + 3) / 9) % 3; // 0 green, 1 yellow, 2 red
+  HOT.signals.forEach(L => L.forEach((l, k) => { const on = !sigOff && (flick ? noise1(t * 25 + k) > .5 : (k === 0 ? phase === 2 : k === 1 ? phase === 1 : phase === 0)); l.m.material.color.set(l.c).multiplyScalar(on ? 1 : .07); }));
+  // plastic sags: cones lean and slump, bottles crumple
+  const sag = live(after(t, B.bottles, 3));
+  HOT.cones.forEach((g, i) => { g.visible = t > B.ambStop + 1 && t < B.return; g.scale.set(1 + sag * .25, 1 - sag * .45, 1 + sag * .25); g.rotation.z = sag * (.25 + .15 * i) * (i % 2 ? -1 : 1); });
+  coolerG.children.forEach((m, i) => { if (i < 2) return; m.scale.set(1 + sag * .3, 1 - sag * .55, 1 + sag * .2); m.rotation.z = sag * (hash(i) - .5) * .9; m.position.y = .84 - sag * .05; });
+  // e-bike batteries: smoke, then flames bike by bike; fire spreads along the dock
+  const fireOn = !back && t > B.batteries;
+  let lightK = 0;
+  HOT.bikes.forEach((b, i) => { b.t0 = i === 0 ? B.batteries + .6 : B.spread + (i - 1) * 1.1; const k = !back ? clamp((t - b.t0) / 1.2, 0, 1) : 0; b.burn = k; lightK = Math.max(lightK, k); });
+  HOT.bikeBlue.color.set('#1f5fa8').lerp(col('#2a2624'), back ? 0 : after(t, B.spread + 2, 5));
+  FIRE.forEach((p, i) => { const b = HOT.bikes[i % 6]; p.s.visible = fireOn && b.burn > .02; if (!p.s.visible) return; const age = ((t * 1.7 + p.r) % 1);
+    p.s.position.set(b.x + (p.r2 - .5) * .9, .5 + age * (1.2 + b.burn * 1.4), b.z + (p.r3 - .5) * .6); p.s.scale.setScalar((.5 + p.r * .7) * (1 - age * .6) * (.5 + b.burn)); p.s.material.color.set(FIRE_COLS[i % 4]); p.s.material.opacity = b.burn * (1 - age) * (.55 + .3 * noise1(t * 12 + i)); });
+  SMOKE.forEach((p, i) => { const b = HOT.bikes[i % 6]; const pre = !back && t > B.batteries - .4 && i % 6 === 0; const on = !back && (b.burn > .02 || pre); p.s.visible = on; if (!on) return; const age = ((t * .32 + p.r) % 1);
+    p.s.position.set(b.x + (p.r2 - .5) * .8 + age * 2.5, 1.2 + age * 13, b.z + (p.r3 - .5) * .8 - age * 1.5); p.s.scale.setScalar(1 + age * 7); p.s.material.opacity = (b.burn > .02 ? .6 : .35) * (1 - age); });
+  fireLight.intensity = lightK * (24 + 10 * noise1(t * 11));
+  // road turns to soft, glossy tar; the abandoned cab sinks in
+  const tar = live(after(t, B.tar, 4));
+  asphalt.roughness = lerp(.82, .3, tar); asphalt.color.set('#ffffff').lerp(col('#7a7a80'), tar);
+  HOT.tar = tar;
+}
+
 // ---------- state ----------
 const T = t => kf(TL.temp, t, false);
 const heatK = t => clamp((T(t) - 24) / 36, 0, 1);
+const heat2K = t => clamp((T(t) - 60) / 40, 0, 1);
 function survivalHours(temp){ const s = TL.survival; if (temp <= s[0][0]) return s[0][1]; for (let i = 1; i < s.length; i++) if (temp <= s[i][0]){ const k = (temp - s[i - 1][0]) / (s[i][0] - s[i - 1][0]); return Math.exp(lerp(Math.log(s[i - 1][1]), Math.log(s[i][1]), k)); } return s[s.length - 1][1]; }
 const isStorm = t => kf(TL.storm, t);
 
 function updateWorld(t){
   const temp = T(t), hk = heatK(t), storm = isStorm(t);
   // sky + light
-  const zen = col('#3c6fb8').lerp(col('#7f9cc0'), hk * .8), hor = col('#cfe0ee').lerp(col('#efe4c8'), hk);
+  const h2 = heat2K(t);
+  const zen = col('#3c6fb8').lerp(col('#7f9cc0'), hk * .8).lerp(col('#c9bfa0'), h2 * .6), hor = col('#cfe0ee').lerp(col('#efe4c8'), hk).lerp(col('#f7ecd2'), h2);
   zen.lerp(col('#3e4450'), storm); hor.lerp(col('#6a6e76'), storm);
   skyU.zen.value.copy(zen); skyU.hor.value.copy(hor); skyU.haloK.value = .45 + hk * .9 - storm * .45; skyU.cloud.value = storm; skyU.t.value = t;
   sunL.intensity = lerp(2.7, 3.1, hk) * (1 - storm * .85); sunL.color.set('#ffe9cc').lerp(col('#fff3d8'), hk);
   hemi.intensity = lerp(.85, 1.0, hk) * (1 - storm * .35); hemi.color.set('#bcd2f0').lerp(col('#e9dfc8'), hk).lerp(col('#8a929e'), storm);
   scene.fog.color.copy(hor); scene.fog.near = lerp(160, 100, hk) * (1 - storm * .4); scene.fog.far = lerp(1500, 1000, hk) * (1 - storm * .3);
   renderer.toneMappingExposure = lerp(1.0, 1.1, hk) * (1 - storm * .12);
-  SHIM.heat = hk * (1 - storm); SHIM.storm = storm;
+  SHIM.heat = hk * (1 - storm); SHIM.heat2 = h2 * (1 - storm); SHIM.storm = storm;
   // screens: swap ads, alerts after the heat emergency, then go dark block by block
   const scr = kf(TL.screens, t, false), alertOn = t > B.warp && t < B.return;
   BOARDS.forEach(b => {
@@ -397,7 +507,7 @@ function updateWorld(t){
   CARS.forEach((c, i) => {
     let z = c.z0 - c.sp * t; if (!c.abandoned) z = 20 - ((20 - z) % 400 + 400) % 400;
     const vis = c.abandoned ? (t > B.cabAbandon && t < B.return + 1) : c.rank < tr;
-    dummy.position.set(c.x, 0, z); dummy.rotation.set(0, c.abandoned ? .35 : 0, 0); dummy.scale.setScalar(vis ? 1 : 0); dummy.updateMatrix();
+    dummy.position.set(c.x, c.abandoned ? -.28 * (HOT.tar || 0) : 0, z); dummy.rotation.set(c.abandoned ? .05 * (HOT.tar || 0) : 0, c.abandoned ? .35 : 0, c.abandoned ? -.04 * (HOT.tar || 0) : 0); dummy.scale.setScalar(vis ? 1 : 0); dummy.updateMatrix();
     CARM.body.setMatrixAt(i, dummy.matrix); CARM.glass.setMatrixAt(i, dummy.matrix);
     for (let w = 0; w < 4; w++){ const wx = w % 2 ? .82 : -.82, wz = w < 2 ? 1.4 : -1.5; const m = dummy.matrix.clone().multiply(new THREE.Matrix4().makeTranslation(wx, .34, wz)); CARM.wheel.setMatrixAt(i * 4 + w, m); }
     const sm = dummy.matrix.clone().multiply(new THREE.Matrix4().makeTranslation(0, 1.6, -.1)); if (!c.taxi) sm.scale(V(0, 0, 0)); CARM.sign.setMatrixAt(i, sm);
@@ -492,7 +602,7 @@ function updatePeople(t){
   // ice cream man and his line (they leave as it gets hot)
   { const on = t > B.iceLine - .5 && t < 26; LINE.forEach((g, i) => { show(g, on && t < 22 - i * .9); setPose(g, i === 0 ? POSE.phone : POSE.stand); }); show(C.iceman, t < 40 || back); setPose(C.iceman, t > 30 && !back ? POSE.brow : POSE.stand); }
   // water seller
-  { const g = C.seller; show(g, t > B.water - .4 && t < 44); coolerG.visible = t > B.water - .4 && t < 44; setPose(g, poseAt([[0, 'stand'], [B.water, 'drink', .5]], t)); g.userData.arms[1].sh.rotation.x = -2.5 + .15 * Math.sin(t * 5); }
+  { const g = C.seller; show(g, t > B.water - .4 && t < 44); coolerG.visible = t > B.water - .4 && t < B.return; setPose(g, poseAt([[0, 'stand'], [B.water, 'drink', .5]], t)); g.userData.arms[1].sh.rotation.x = -2.5 + .15 * Math.sin(t * 5); }
   // people on the steps fan themselves, then leave
   SITTERS.forEach(({ g, i, fan }) => { const leave = 29 + i * .7; const on = t > B.stepsSit - 1 + i * .25 && t < leave; show(g, on); let p = fan && t > B.stepsSit ? POSE.sitStepFan : POSE.sitStep; if (fan && t > B.stepsSit){ p = Object.assign({}, p, { aR: [p.aR[0], p.aR[1] + .1 * Math.sin(t * 10 + i), p.aR[2] + .35 * Math.sin(t * 12 + i)] }); } setPose(g, p); });
   // the last two walk into the subway
@@ -512,7 +622,7 @@ function counterBlock(x, y, label, value, sub, alpha, vcol = '#fff'){
   if (sub){ ctx.font = '400 17px Tinos'; ctx.letterSpacing = '4px'; ctx.globalAlpha = alpha * .82; ctx.fillText(sub, x, y + 98); }
   ctx.restore();
 }
-function fmtSurv(hrs){ if (hrs >= 47.5){ const d = Math.round(hrs / 24); return `≈ ${d} days`; } const h = Math.round(hrs); return `≈ ${h} hours`; }
+function fmtSurv(hrs){ if (hrs >= 47.5){ const d = Math.round(hrs / 24); return `≈ ${d} days`; } if (hrs >= 2){ return `≈ ${Math.round(hrs)} hours`; } return `≈ ${Math.round(hrs * 60 / 5) * 5} minutes`; }
 function resolve(v, t){
   const temp = T(t);
   if (v === '@temp') return `${Math.round(temp)} °C`;
@@ -576,7 +686,8 @@ const pctx = pic.getContext('2d', { alpha: false });
 function drawPicture(t){
   const hk = SHIM.heat, st = SHIM.storm;
   const f = [];
-  if (hk > .01) f.push(`sepia(${(.42 * hk).toFixed(2)})`, `saturate(${(1 + .18 * hk).toFixed(2)})`, `brightness(${(1 + .1 * hk).toFixed(2)})`, `contrast(${(1 - .12 * hk).toFixed(2)})`);
+  const h2 = SHIM.heat2 || 0;
+  if (hk > .01) f.push(`sepia(${(.42 * hk + .18 * h2).toFixed(2)})`, `saturate(${(1 + .18 * hk + .1 * h2).toFixed(2)})`, `brightness(${(1 + .1 * hk + .05 * h2).toFixed(2)})`, `contrast(${(1 - .12 * hk - .04 * h2).toFixed(2)})`);
   if (st > .01) f.push(`saturate(${(1 - .35 * st).toFixed(2)})`, `brightness(${(1 - .12 * st).toFixed(2)})`);
   pctx.filter = f.length ? f.join(' ') : 'none'; pctx.imageSmoothingEnabled = true; pctx.imageSmoothingQuality = 'high';
   pctx.drawImage(glc, 0, 0, W, H); pctx.filter = 'none';
@@ -588,7 +699,7 @@ function drawPicture(t){
       const band = Math.exp(-Math.pow((y / H - .47) / .13, 2));
       // smooth, slowly rising waves (no slice-to-slice jumps)
       const off = Math.sin(y * .045 - t * 5.3) * .6 + Math.sin(y * .017 + t * 2.1) * .4 + (noise1(y * .02 - t * 1.7) - .5) * .8;
-      const dx = Math.round(off * 3.2 * hk * band * 2) / 2; if (Math.abs(dx) < .5) continue;
+      const dx = Math.round(off * 3.2 * hk * (1 + 1.3 * h2) * band * 2) / 2; if (Math.abs(dx) < .5) continue;
       ctx.drawImage(pic, 0, y, W, S, dx, y, W, S);
     }
   }
@@ -603,12 +714,12 @@ window.setup = (tl) => { TL = tl; B = tl.beats; return true; };
 window.renderFrame = (t) => {
   if (TL.loopAt && t >= TL.loopAt){ const k = smooth((t - TL.loopAt) / (TL.duration - 1 / 30 - TL.loopAt)); window.renderFrame(0); ctx.fillStyle = `rgba(0,0,0,${1 - k})`; ctx.fillRect(0, 0, W, H); return; }
   if (t >= TL.endAt){ sceneEnd(t, TL.endAt); return; }
-  updateWorld(t); updatePeople(t);
+  updateWorld(t); updatePeople(t); updateHot(t);
   renderer.render(scene, camera);
   drawPicture(t);
-  const hk = heatK(t) * (1 - isStorm(t));
+  const hk = heatK(t) * (1 - isStorm(t)), hk2 = heat2K(t) * (1 - isStorm(t));
   // sun glare from the top right as it heats up
-  if (hk > .05){ const g = ctx.createRadialGradient(W * .9, -80, 0, W * .9, -80, 900); g.addColorStop(0, `rgba(255,236,190,${.75 * hk})`); g.addColorStop(1, 'rgba(255,236,190,0)'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); }
+  if (hk > .05){ const g = ctx.createRadialGradient(W * .9, -80, 0, W * .9, -80, 900); g.addColorStop(0, `rgba(255,236,190,${Math.min(1, .75 * hk + .25 * hk2)})`); g.addColorStop(1, 'rgba(255,236,190,0)'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); }
   drawRain(t, kf(TL.storm, t));
   const vg = ctx.createRadialGradient(W / 2, H / 2, H * .34, W / 2, H / 2, H * .8); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.28)'); ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
   const tg = ctx.createLinearGradient(0, 0, 0, 600); tg.addColorStop(0, 'rgba(0,0,0,.42)'); tg.addColorStop(1, 'rgba(0,0,0,0)'); ctx.fillStyle = tg; ctx.fillRect(0, 0, W, 600);

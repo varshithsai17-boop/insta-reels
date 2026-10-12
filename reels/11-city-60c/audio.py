@@ -75,7 +75,7 @@ def horn(t0, f=420, d=.35, g=.06, pan=-.3):
     e = np.where(x > 0, np.minimum(1, x / .01), 0) * np.where(x < d + .1, 1, 0) * np.where(x < d, 1, np.exp(-(x - d) * 40))
     s = (np.sign(np.sin(2 * np.pi * f * t)) * .5 + np.sin(2 * np.pi * f * 1.26 * t)) * e
     add(lp(s, 2500), g, pan)
-for h in [2.2, 5.8, 9.1, 12.7, 17.3, 21.9, 28.4, 86.2, 88.4]:
+for h in [2.2, 5.8, 9.1, 12.7, 17.3, 21.9, 28.4, 146.2, 148.4]:
     horn(h, 380 + rng.random() * 120, .2 + rng.random() * .4, .035 + rng.random() * .02, (rng.random() - .5) * 1.2)
 # screens/AC hum: 60 Hz + harmonics, swelling with the heat, dying with the screens
 hum = sum(np.sin(2 * np.pi * 60 * k * t) / k for k in (1, 2, 3, 5))
@@ -132,17 +132,52 @@ for i in range(5):
     add(fl, .05, -.3); thud(t0 + .65, .05, 140)
 # the last quiet stretch: a slow heartbeat under the heat
 hb = np.zeros(N)
-for b in np.arange(63.0, 79.2, 1.05):
+for b in np.arange(63.0, 138.6, 1.05 - 0.0):
     for off, g in ((0, 1), (.28, .6)):
         e = env(b + off, .005, .09); hb += np.sin(2 * np.pi * 48 * (t - b)) * e * g
 add(lp(hb, 200) * smooth((t - 63) / 4), .32)
+
+# ---- 60 → 100 °C ----
+# sprinklers: rushing water from the doorways and gutters, getting quieter as it dries
+wk = smooth((t - B['sprinklers']) / 1.5) * (1 - .6 * smooth((t - B['tar']) / 15)) * (1 - smooth((t - B['return'] - .3) / 1))
+add(bp(noise(), 400, 6000) * (.7 + .3 * slow_noise(5)) * wk, .05, -.3)
+add(lp(noise(), 600) * wk, .05, .3)
+# dying trees: a dry rustle as the leaves let go
+lv = np.where((t > B['leaves']) & (t < B['leaves'] + 7), 1, 0) * smooth((t - B['leaves']) / .8)
+add(bp(noise(), 2500, 9000) * (np.abs(np.sin(2 * np.pi * 3.1 * t)) ** 6) * lv, .05, .2)
+# propane relief valve: a steady hiss until the fire reaches it
+pv = smooth((t - B['propane']) / .3) * np.where(t < B['fireball'], 1, 0)
+add(bp(noise(), 2500, 12000) * pv * (.85 + .15 * slow_noise(8)), .07, .35)
+# traffic lights: relay clicks and a fading buzz
+for i in range(6):
+    add(bp(noise() * env(B['signals'] + i * .22 + rng.random() * .05, .001, .015), 1500, 7000), .25, -.4)
+add(np.sin(2 * np.pi * 120 * t) * np.where((t > B['signals']) & (t < B['signals'] + 1.5), 1 - (t - B['signals']) / 1.5, 0), .02, -.4)
+# plastic: soft creaks as bottles and cones sag
+for i in range(10):
+    t0 = B['bottles'] + i * .45 + rng.random() * .2
+    add(bp(noise(), 1200, 5000) * env(t0, .02, .12), .05, (rng.random() - .5))
+# batteries: crackle, pops, then a roaring fire that spreads
+fire_k = np.clip(kf([[0, 0], [B['batteries'] + .4, 0], [B['batteries'] + 1.6, .5], [B['spread'], .6], [B['spread'] + 6, 1], [B['rain'], 1], [B['rain'] + 2.5, 0], [DUR, 0]], t), 0, 1)
+crack = (rng.random(N) < .004) * rng.standard_normal(N) * 3
+add(hp(crack, 1500) * fire_k, .12, .1)
+add(lp(noise(), 400) * fire_k * (.7 + .3 * slow_noise(4)), .12, .1)
+for i in range(7):
+    t0 = (B['batteries'] + .6) if i == 0 else B['spread'] + (i - 1) * 1.1
+    add(bp(noise(), 300, 4000) * env(t0, .002, .2), .3, .1)
+# fireball: a deep whoomp and a long roll
+fbk = lp(noise(), 120, 3) * env(B['fireball'], .03, 1.6) + lp(noise(), 1500) * env(B['fireball'], .005, .35) * .8
+add(fbk / np.max(np.abs(fbk)), .7, .2)
+# tar: slow bubbling
+for i in range(40):
+    t0 = B['tar'] + rng.random() * 17
+    add(np.sin(2 * np.pi * (180 + rng.random() * 120) * (t - t0)) * env(t0, .004, .05), .04, -.5 + rng.random() * .3)
 
 # ---- storm: thunder, rain, then the hiss of rain boiling off the road ----
 thunder = lp(noise(), 220, 3) * env(B['rain'] - .2, .05, 2.8) + lp(noise(), 900) * env(B['rain'] - .2, .002, .25) * .6
 add(thunder / np.max(np.abs(thunder)), .55)
 add(lp(noise(), 150, 3) * env(B['rain'] + 2.8, .4, 2.2), .25)
 rain = hp(noise(), 1800) * (.6 + .4 * slow_noise(9))
-rain_k = np.clip(kf([[0, 0], [B['rain'] - .1, 0], [B['rain'] + .8, 1], [84.5, .8], [88, .15], [95, 0]], t), 0, 1)
+rain_k = np.clip(kf([[0, 0], [B['rain'] - .1, 0], [B['rain'] + .8, 1], [B['return'] + .5, .8], [B['return'] + 4, .15], [DUR, 0]], t), 0, 1)
 add(rain * rain_k, .1, -.15); add(hp(noise(), 2500) * rain_k, .06, .4)
 sizzle = bp(noise(), 3000, 11000) * (.7 + .3 * (rng.random(N) < .002) * 6)
 add(sizzle * steam, .07)
