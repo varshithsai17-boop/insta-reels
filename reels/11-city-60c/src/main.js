@@ -619,14 +619,19 @@ const AMBER = '#f5a33b';
 function counterBlock(x, y, label, value, sub, alpha, vcol = '#fff'){
   ctx.save(); ctx.globalAlpha = alpha; shadowOn(.9); ctx.shadowBlur = 18; ctx.textAlign = 'left'; ctx.fillStyle = '#fff';
   ctx.font = '400 21px Tinos'; ctx.letterSpacing = '5px'; ctx.globalAlpha = alpha * .88; ctx.fillText(label, x, y);
-  ctx.font = '400 66px Tinos'; ctx.letterSpacing = '1px'; ctx.globalAlpha = alpha; ctx.fillStyle = vcol; ctx.fillText(value, x - 2, y + 66); ctx.fillStyle = '#fff';
+  ctx.font = '400 66px Tinos'; ctx.letterSpacing = '1px'; ctx.globalAlpha = alpha; ctx.fillStyle = vcol;
+  if (value.includes(' | ')){ // "60 °C | 140 °F": both units in the same size, the bar a little dimmer
+    const [a, c] = value.split(' | '); let xx = x - 2; ctx.fillText(a, xx, y + 66); xx += ctx.measureText(a + '  ').width;
+    ctx.globalAlpha = alpha * .5; ctx.fillText('|', xx, y + 62); xx += ctx.measureText('|  ').width; ctx.globalAlpha = alpha; ctx.fillText(c, xx, y + 66);
+  } else ctx.fillText(value, x - 2, y + 66);
+  ctx.fillStyle = '#fff';
   if (sub){ ctx.font = '400 17px Tinos'; ctx.letterSpacing = '4px'; ctx.globalAlpha = alpha * .82; ctx.fillText(sub, x, y + 98); }
   ctx.restore();
 }
 function fmtSurv(hrs){ if (hrs >= 47.5){ const d = Math.round(hrs / 24); return `≈ ${d} days`; } if (hrs >= 2){ return `≈ ${Math.round(hrs)} hours`; } return `≈ ${Math.round(hrs * 60 / 5) * 5} minutes`; }
 function resolve(v, t){
   const temp = T(t);
-  if (v === '@temp') return `${Math.round(temp)} °C`;
+  if (v === '@temp') return `${Math.round(temp)} °C | ${Math.round(temp * 9 / 5 + 32)} °F`;
   if (v === '@tempF') return `${Math.round(temp * 9 / 5 + 32)} °F`;
   if (v === '@surv') return fmtSurv(survivalHours(temp));
   return v;
