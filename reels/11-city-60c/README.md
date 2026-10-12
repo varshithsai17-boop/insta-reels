@@ -1,6 +1,6 @@
-# #11 — What if your city hit 60 °C?
+# #11 — What if your city hit 100 °C?
 
-Still reel: one locked camera on the TKTS red steps in Times Square. v3 is a 2:35 draft that climbs to 100 °C (Varshith will choose what to cut). The temperature climbs from a normal 22 °C to 60 °C and every step shows an effect: the crowd thins, people faint and are helped, the city breaks down. Then a storm breaks the heat, the rain boils off the road, and the square comes back to frame 0 (loop).
+Still reel: one locked camera on the TKTS red steps in Times Square. v4 (1:33) climbs from 22 °C to 100 °C; v3 was a 2:35 draft with every beat, cut down on Varshith's go. The temperature climbs from a normal 22 °C to 60 °C and every step shows an effect: the crowd thins, people faint and are helped, the city breaks down. Then a storm breaks the heat, the rain boils off the road, and the square comes back to frame 0 (loop).
 
 **Status:** renderer page published ("#11 Renderer", https://claude.ai/artifact/1tYkrWYX4nY22tESqGJpu4); waiting for the GPU render.
 

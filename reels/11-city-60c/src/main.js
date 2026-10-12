@@ -291,7 +291,7 @@ const CROWD = [];
   for (let i = 0; i < 90; i++) add(-FAC + 1 + r() * 6.5, 10 - r() * 260, { dir: r() < .5 ? 1 : -1, sp: 1.1 + r() * .4 });
   // people who end up lying in the shade (left sidewalk under the awnings, and the plaza far side)
   CROWD.forEach(p => { p.liePick = r(); });
-  CROWD.forEach(p => { const shadeZone = p.x < -17 || (p.x > 16 && p.z < -30); p.willLie = shadeZone && p.liePick < .35; p.lieT = 41 + p.liePick * 30; p.goneT = 54 + r() * 16; });
+  CROWD.forEach(p => { const shadeZone = p.x < -17 || (p.x > 16 && p.z < -30); p.willLie = shadeZone && p.liePick < .35; p.goneR = r(); });
 }
 // keep walkers off the cart/ice-cream/cooler/subway and out of the hero area
 const crowd = makeCrowd(CROWD, R); scene.add(crowd.group);
@@ -459,7 +459,7 @@ function updateWorld(t){
   renderer.toneMappingExposure = lerp(1.0, 1.1, hk) * (1 - storm * .12);
   SHIM.heat = hk * (1 - storm); SHIM.heat2 = h2 * (1 - storm); SHIM.storm = storm;
   // screens: swap ads, alerts after the heat emergency, then go dark block by block
-  const scr = kf(TL.screens, t, false), alertOn = t > B.warp && t < B.return;
+  const scr = kf(TL.screens, t, false), alertOn = t > (B.alerts != null ? B.alerts : B.warp) && t < B.return;
   BOARDS.forEach(b => {
     if (b.temp){ drawTempScreen(temp, t); }
     else b.mat.map = alertOn && b.alert ? alertTex[b.portrait ? 1 : 0] : (Math.floor((t + b.phase) / b.swap) % 2 ? b.tex2 : b.tex1);
@@ -529,13 +529,14 @@ function updatePeople(t){
     const s = CSTATE[i];
     let z = p.z, x = p.x;
     if (p.dir){ const span = p.x < -17 ? 270 : 224, top = p.x < -17 ? 12 : -4; z = top - (((top - (p.z + p.dir * p.sp * t)) % span) + span) % span; }
-    const lying = p.willLie && t > p.lieT && t < p.goneT && t < B.return;
+    const lieT = B.lying + p.liePick * 12, goneT = B.lying + 8 + p.goneR * 8;
+    const lying = p.willLie && t > lieT && t < goneT && t < B.return;
     s.x = x; s.z = z; s.yaw = p.dir ? (p.dir > 0 ? 0 : Math.PI) : p.yaw;
     s.walk = p.dir && !lying ? (p.sp * t * 6 + p.ph) : null;
     if (lying){ s.walk = null; s.z = p.z; }
     s.vis = lying || (p.rank < dens);
     s.lie = lying ? 1 : 0;
-    s.phone = !lying && p.phone && t < 30;
+    s.phone = !lying && p.phone && t < B.faint1 + 4;
     s.fan = !lying && !p.dir && p.fan && hk > .2;
     s.hx = lying ? 0 : (hk > .4 ? .25 : 0);
   });
@@ -548,7 +549,7 @@ function updatePeople(t){
   const C = CAST, back = t > B.return + .5;
   // the old man: fans himself, faints, is helped, medics, stretcher
   { const g = C.old;
-    const track = [[0, 'stand'], [14, 'fan'], [B.faint1 - 1.2, 'sway', .6], [B.faint1, 'buckle', .45], [B.faint1 + .45, 'lieSide', .7]];
+    const track = [[0, 'stand'], [B.stepsSit + .5, 'fan'], [B.faint1 - 1.2, 'sway', .6], [B.faint1, 'buckle', .45], [B.faint1 + .45, 'lieSide', .7]];
     let p = poseAt(track, t);
     const onStretcher = t > B.stretcher;
     show(g, !onStretcher || t < B.stretcher + 7 ? true : false);
@@ -559,7 +560,7 @@ function updatePeople(t){
       const ry = STRETCH.rotation.y; g.position.set(sx + Math.sin(ry) * .85, .14 + .95, sz + Math.cos(ry) * .85); g.rotation.y = ry; p = blendPose(POSE.lieBack, POSE.lieBack, 0); p = Object.assign({}, p, { by: 0 });
       g.visible = k < 1;
     } else { g.position.copy(g.userData.home); g.rotation.y = g.userData.yaw0; STRETCH.visible = false; }
-    if (p.aR && t > 14 && t < B.faint1 - 1.2){ p = Object.assign({}, p, { aR: [p.aR[0], p.aR[1] + .12 * Math.sin(t * 9), p.aR[2] + .3 * Math.sin(t * 11)] }); }
+    if (p.aR && t > B.stepsSit + .5 && t < B.faint1 - 1.2){ p = Object.assign({}, p, { aR: [p.aR[0], p.aR[1] + .12 * Math.sin(t * 9), p.aR[2] + .3 * Math.sin(t * 11)] }); }
     setPose(g, p); if (back) g.visible = true, g.position.copy(g.userData.home), setPose(g, POSE.stand);
   }
   // the woman who helps him, then steps back for the medics
@@ -578,10 +579,10 @@ function updatePeople(t){
   { const g = C.sway, f = C.friend;
     setPose(g, back ? POSE.stand : poseAt([[0, 'stand'], [B.sway, 'sway', .8], [B.sway + 3.5, 'stand', 1], [B.faint3 - .6, 'buckle', .5], [B.faint3, 'sitGround', .7], [B.faint3 + 2.2, 'lieBack', 1.2]], t));
     setPose(f, back ? POSE.stand : poseAt([[0, 'stand'], [B.sway + .5, 'steady', .6], [B.sway + 4, 'stand', .8], [B.faint3 - .2, 'kneel', .6]], t));
-    const gone = t > 60 && !back; show(g, !gone); show(f, !gone); }
+    const gone = t > B.subwayWalk - .5 && !back; show(g, !gone); show(f, !gone); }
   // two more collapse at 41°
-  { const g = C.f2; setPose(g, back ? POSE.stand : poseAt([[0, 'stand'], [18, 'brow', .8], [B.faint2 - .7, 'sway', .5], [B.faint2, 'buckle', .4], [B.faint2 + .4, 'lieSide', .6]], t)); show(g, back || t < 57); }
-  { const g = C.f3; setPose(g, back ? POSE.stand : poseAt([[0, 'stand'], [22, 'drink', .8], [B.faint3 + .3, 'sitGround', .9], [B.faint3 + 2.5, 'slump', 1]], t)); show(g, back || t < 61); }
+  { const g = C.f2; setPose(g, back ? POSE.stand : poseAt([[0, 'stand'], [B.sway - .5, 'brow', .8], [B.faint2 - .7, 'sway', .5], [B.faint2, 'buckle', .4], [B.faint2 + .4, 'lieSide', .6]], t)); show(g, back || t < B.subwayWalk - 1); }
+  { const g = C.f3; setPose(g, back ? POSE.stand : poseAt([[0, 'stand'], [B.subwayHaze - .6, 'drink', .8], [B.faint3 + .3, 'sitGround', .9], [B.faint3 + 2.5, 'slump', 1]], t)); show(g, back || t < B.subwayWalk); }
   // Elmo: head comes off, then he slumps against the pigeon pole
   { const g = C.elmo, eh = g.userData.elmoHead, u = g.userData;
     const off = t > B.elmoHead && !back, k = clamp((t - B.elmoHead) / .8, 0, 1);
@@ -589,22 +590,22 @@ function updatePeople(t){
     const hand = u.arms[1].hd;
     if (off && k >= 1){ if (eh.parent !== hand){ hand.add(eh); } eh.position.set(0, -.3, .12); eh.rotation.set(0, 0, 0); }
     else { if (eh.parent !== u.head) u.head.add(eh); eh.position.set(0, .06 + (off ? k * .35 : 0), off ? k * .2 : 0); }
-    let p = back ? POSE.stand : poseAt([[0, 'stand'], [5, 'phone', .5], [8, 'stand', .5], [B.elmoHead - .3, 'holdHead', .4], [B.elmoHead + 1.0, 'stand', .5], [B.elmoSlump, 'slump', 1.0]], t);
+    let p = back ? POSE.stand : poseAt([[0, 'stand'], [2.5, 'phone', .5], [5, 'stand', .5], [B.elmoHead - .3, 'holdHead', .4], [B.elmoHead + 1.0, 'stand', .5], [B.elmoSlump, 'slump', 1.0]], t);
     g.position.copy(g.userData.home); g.rotation.y = g.userData.yaw0;
-    setPose(g, p); show(g, back || t < 63); }
+    setPose(g, p); show(g, back || t < B.subwayWalk + .5); }
   // hot-dog vendor collapses behind his cart; a man kneels by him
   { const g = C.vendor, w = C.witness;
-    setPose(g, back ? POSE.stand : poseAt([[0, 'stand'], [16, 'brow', .8], [B.vendor - 1, 'sway', .5], [B.vendor, 'buckle', .45], [B.vendor + .45, 'lieSide', .7]], t));
-    show(g, back || t < 66);
-    const wOn = t > B.witness - 1.5 && t < 66 && !back; show(w, wOn);
+    setPose(g, back ? POSE.stand : poseAt([[0, 'stand'], [B.stepsSit + 1.5, 'brow', .8], [B.vendor - 1, 'sway', .5], [B.vendor, 'buckle', .45], [B.vendor + .45, 'lieSide', .7]], t));
+    show(g, back || t < B.banners + 3);
+    const wOn = t > B.witness - 1.5 && t < B.banners + 3 && !back; show(w, wOn);
     if (wOn){ const k = clamp((t - (B.witness - 1.5)) / 1.4, 0, 1); w.position.set(lerp(CART.x - 1.2, CART.x - 2.1, ease(k)), .14, lerp(CART.z - 5, CART.z + .9, ease(k))); w.rotation.y = k < 1 ? -.1 : 2.6; setPose(w, k < 1 ? walkLegs(Object.assign({}, POSE.stand), t * 7, 1) : POSE.kneel); }
     else if (back){ w.visible = false; } }
   // ice cream man and his line (they leave as it gets hot)
-  { const on = t > B.iceLine - .5 && t < 26; LINE.forEach((g, i) => { show(g, on && t < 22 - i * .9); setPose(g, i === 0 ? POSE.phone : POSE.stand); }); show(C.iceman, t < 40 || back); setPose(C.iceman, t > 30 && !back ? POSE.brow : POSE.stand); }
+  { const on = t > B.iceLine - .5 && t < B.faint1; LINE.forEach((g, i) => { show(g, on && t < B.faint1 - 1 - i * .6); setPose(g, i === 0 ? POSE.phone : POSE.stand); }); show(C.iceman, t < B.medics - 1 || back); setPose(C.iceman, t > B.elmoHead - 1 && !back ? POSE.brow : POSE.stand); }
   // water seller
-  { const g = C.seller; show(g, t > B.water - .4 && t < 44); coolerG.visible = t > B.water - .4 && t < B.return; setPose(g, poseAt([[0, 'stand'], [B.water, 'drink', .5]], t)); g.userData.arms[1].sh.rotation.x = -2.5 + .15 * Math.sin(t * 5); }
+  { const g = C.seller; show(g, t > B.water - .4 && t < B.medics - 1); coolerG.visible = t > B.water - .4 && t < B.return; setPose(g, poseAt([[0, 'stand'], [B.water, 'drink', .5]], t)); g.userData.arms[1].sh.rotation.x = -2.5 + .15 * Math.sin(t * 5); }
   // people on the steps fan themselves, then leave
-  SITTERS.forEach(({ g, i, fan }) => { const leave = 29 + i * .7; const on = t > B.stepsSit - 1 + i * .25 && t < leave; show(g, on); let p = fan && t > B.stepsSit ? POSE.sitStepFan : POSE.sitStep; if (fan && t > B.stepsSit){ p = Object.assign({}, p, { aR: [p.aR[0], p.aR[1] + .1 * Math.sin(t * 10 + i), p.aR[2] + .35 * Math.sin(t * 12 + i)] }); } setPose(g, p); });
+  SITTERS.forEach(({ g, i, fan }) => { const leave = B.faint1 + 2 + i * .5; const on = t > B.stepsSit - 1 + i * .25 && t < leave; show(g, on); let p = fan && t > B.stepsSit ? POSE.sitStepFan : POSE.sitStep; if (fan && t > B.stepsSit){ p = Object.assign({}, p, { aR: [p.aR[0], p.aR[1] + .1 * Math.sin(t * 10 + i), p.aR[2] + .35 * Math.sin(t * 12 + i)] }); } setPose(g, p); });
   // the last two walk into the subway
   { const on = t > B.subwayWalk - 1 && t < B.subwayWalk + 6; for (const [k, name] of [[0, 'walkA'], [1, 'walkB']]){ const g = C[name]; show(g, on || back); if (!on){ setPose(g, POSE.stand); g.position.copy(g.userData.home); continue; }
       const s = clamp((t - (B.subwayWalk - 1)) / 5, 0, 1); const from = V(3.0 + k * .6, .14, -13.8), to = V(SUBWAY.x - .3 + k * .6, .14, SUBWAY.z - 3.8);

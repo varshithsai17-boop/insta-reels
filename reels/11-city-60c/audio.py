@@ -75,7 +75,7 @@ def horn(t0, f=420, d=.35, g=.06, pan=-.3):
     e = np.where(x > 0, np.minimum(1, x / .01), 0) * np.where(x < d + .1, 1, 0) * np.where(x < d, 1, np.exp(-(x - d) * 40))
     s = (np.sign(np.sin(2 * np.pi * f * t)) * .5 + np.sin(2 * np.pi * f * 1.26 * t)) * e
     add(lp(s, 2500), g, pan)
-for h in [2.2, 5.8, 9.1, 12.7, 17.3, 21.9, 28.4, 146.2, 148.4]:
+for h in [2.2, 5.8, 9.1, 12.7, 17.3, 21.9, B['return'] + 2.2, B['return'] + 4.4]:
     horn(h, 380 + rng.random() * 120, .2 + rng.random() * .4, .035 + rng.random() * .02, (rng.random() - .5) * 1.2)
 # screens/AC hum: 60 Hz + harmonics, swelling with the heat, dying with the screens
 hum = sum(np.sin(2 * np.pi * 60 * k * t) / k for k in (1, 2, 3, 5))
@@ -132,10 +132,10 @@ for i in range(5):
     add(fl, .05, -.3); thud(t0 + .65, .05, 140)
 # the last quiet stretch: a slow heartbeat under the heat
 hb = np.zeros(N)
-for b in np.arange(63.0, 138.6, 1.05 - 0.0):
+for b in np.arange(B['subwayWalk'], B['rain'] - .8, 1.05):
     for off, g in ((0, 1), (.28, .6)):
         e = env(b + off, .005, .09); hb += np.sin(2 * np.pi * 48 * (t - b)) * e * g
-add(lp(hb, 200) * smooth((t - 63) / 4), .32)
+add(lp(hb, 200) * smooth((t - B['subwayWalk']) / 4), .32)
 
 # ---- 60 → 100 °C ----
 # sprinklers: rushing water from the doorways and gutters, getting quieter as it dries
