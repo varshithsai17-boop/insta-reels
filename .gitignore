@@ -11,4 +11,4 @@ _claude_analysis/work/**
 *.bin
 *.part*
 !*source.zip
-node_modules/
+node_modules
