@@ -1,0 +1,11 @@
+{
+  "name": "whatif-11-city-60c",
+  "private": true,
+  "description": "#11 What if your city hit 60 °C? (reel source)",
+  "dependencies": {
+    "@fontsource/tinos": "5.3.0",
+    "three": "0.160.0",
+    "mp4-muxer": "5.2.1",
+    "esbuild": "0.24.0"
+  }
+}
