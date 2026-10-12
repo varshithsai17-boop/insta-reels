@@ -446,6 +446,7 @@ const heat2K = t => clamp((T(t) - 60) / 40, 0, 1);
 function survivalHours(temp){ const s = TL.survival; if (temp <= s[0][0]) return s[0][1]; for (let i = 1; i < s.length; i++) if (temp <= s[i][0]){ const k = (temp - s[i - 1][0]) / (s[i][0] - s[i - 1][0]); return Math.exp(lerp(Math.log(s[i - 1][1]), Math.log(s[i][1]), k)); } return s[s.length - 1][1]; }
 const isStorm = t => kf(TL.storm, t);
 
+const TRAFFIC_DUMMY = new THREE.Object3D(), _tm = new THREE.Matrix4(), _tw = new THREE.Matrix4(), _zero3 = V(0, 0, 0);
 function updateWorld(t){
   const temp = T(t), hk = heatK(t), storm = isStorm(t);
   // sky + light
@@ -503,14 +504,14 @@ function updateWorld(t){
   amb.position.set(-7.4, 0, lerp(-240, -22, inK) + outK * 60); amb.rotation.y = Math.PI;
   const fl = Math.sin(t * 14) > 0; amb.userData.bar[0].material.color.set(fl ? '#ff2a2a' : '#4a0a0a'); amb.userData.bar[1].material.color.set(!fl ? '#f4efe0' : '#3a3a3a'); amb.userData.glow[0].material.opacity = fl ? .9 : 0; amb.userData.glow[1].material.opacity = fl ? 0 : .7;
   // traffic
-  const tr = kf(TL.traffic, t, false); let ci = 0; const dummy = new THREE.Object3D();
+  const tr = kf(TL.traffic, t, false); const dummy = TRAFFIC_DUMMY;
   CARS.forEach((c, i) => {
     let z = c.z0 - c.sp * t; if (!c.abandoned) z = 20 - ((20 - z) % 400 + 400) % 400;
     const vis = c.abandoned ? (t > B.cabAbandon && t < B.return + 1) : c.rank < tr;
     dummy.position.set(c.x, c.abandoned ? -.28 * (HOT.tar || 0) : 0, z); dummy.rotation.set(c.abandoned ? .05 * (HOT.tar || 0) : 0, c.abandoned ? .35 : 0, c.abandoned ? -.04 * (HOT.tar || 0) : 0); dummy.scale.setScalar(vis ? 1 : 0); dummy.updateMatrix();
     CARM.body.setMatrixAt(i, dummy.matrix); CARM.glass.setMatrixAt(i, dummy.matrix);
-    for (let w = 0; w < 4; w++){ const wx = w % 2 ? .82 : -.82, wz = w < 2 ? 1.4 : -1.5; const m = dummy.matrix.clone().multiply(new THREE.Matrix4().makeTranslation(wx, .34, wz)); CARM.wheel.setMatrixAt(i * 4 + w, m); }
-    const sm = dummy.matrix.clone().multiply(new THREE.Matrix4().makeTranslation(0, 1.6, -.1)); if (!c.taxi) sm.scale(V(0, 0, 0)); CARM.sign.setMatrixAt(i, sm);
+    for (let w = 0; w < 4; w++){ const wx = w % 2 ? .82 : -.82, wz = w < 2 ? 1.4 : -1.5; const m = _tm.multiplyMatrices(dummy.matrix, _tw.makeTranslation(wx, .34, wz)); CARM.wheel.setMatrixAt(i * 4 + w, m); }
+    const sm = _tm.multiplyMatrices(dummy.matrix, _tw.makeTranslation(0, 1.6, -.1)); if (!c.taxi) sm.scale(_zero3); CARM.sign.setMatrixAt(i, sm);
   });
   Object.values(CARM).forEach(m => { m.instanceMatrix.needsUpdate = true; });
   CARM.body.count = CARM.glass.count = CARM.sign.count = CARS.length; CARM.wheel.count = CARS.length * 4;

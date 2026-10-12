@@ -256,6 +256,9 @@ export function makeCrowd(spots, R){
 }
 const _m = new THREE.Matrix4(), _q = new THREE.Quaternion(), _e = new THREE.Euler(), _s = new THREE.Vector3(), _p = new THREE.Vector3(), ZERO = new THREE.Matrix4().makeScale(0, 0, 0);
 const M4 = (x, y, z, rx, ry, rz, s = 1) => new THREE.Matrix4().compose(_p.set(x, y, z), _q.setFromEuler(_e.set(rx, ry, rz)), _s.set(s, s, s));
+// per-frame scratch matrices (no allocations inside the crowd loop)
+const _base = new THREE.Matrix4(), _loc = new THREE.Matrix4(), _hm = new THREE.Matrix4(), _sh = new THREE.Matrix4(), _el = new THREE.Matrix4(), _hd = new THREE.Matrix4(), _ph = new THREE.Matrix4(), _tmp = new THREE.Matrix4(), _hand = new THREE.Matrix4().makeTranslation(0, -.28, 0);
+const L4 = (x, y, z, rx, ry, rz, s = 1) => _loc.compose(_p.set(x, y, z), _q.setFromEuler(_e.set(rx, ry, rz)), _s.set(s, s, s));
 // state per person: { x, z, yaw, vis(0/1), walk(phase or null), lie (0..1), phone(0/1), fan(0/1) }
 export function updateCrowd(C, states, t){
   let np = 0;
@@ -268,25 +271,25 @@ export function updateCrowd(C, states, t){
     const lie = st.lie || 0, walking = st.walk != null;
     const bob = walking ? Math.abs(Math.sin(st.walk)) * .03 : 0;
     // body root: lying people roll onto their side about the feet
-    const base = M4(st.x, bob + lie * .2, st.z, 0, st.yaw, lie * 1.5, p.s);
+    const base = _base.compose(_p.set(st.x, bob + lie * .2, st.z), _q.setFromEuler(_e.set(0, st.yaw, lie * 1.5)), _s.set(p.s, p.s, p.s));
     C.topMat = base;
     (p.female ? C.topF : C.topM).setMatrixAt(p.topIdx, base);
-    const hm = base.clone().multiply(M4(0, 1.648, 0, (st.hx || 0) - .05 * (1 - lie), st.hy || 0, 0));
+    const hm = _hm.multiplyMatrices(base, L4(0, 1.648, 0, (st.hx || 0) - .05 * (1 - lie), st.hy || 0, 0));
     C.head.setMatrixAt(i, hm); C.hair[p.hs].setMatrixAt(p.hairIdx, hm);
     for (let a = 0; a < 2; a++){
       const sd = a ? 1 : -1;
       const sw = walking ? Math.sin(st.walk + a * Math.PI) * .45 : 0;
       const legRx = lie ? (a ? -.3 : -.05) : sw;
-      C.leg.setMatrixAt(i * 2 + a, base.clone().multiply(M4(sd * .1, .95, 0, legRx, 0, 0)));
+      C.leg.setMatrixAt(i * 2 + a, _tmp.multiplyMatrices(base, L4(sd * .1, .95, 0, legRx, 0, 0)));
       let ux = walking ? -sw * .7 : 0, uz = sd * .08, fx = -.12;
       if (st.fan && a === 1){ ux = -1.9 + .1 * Math.sin(t * 9 + p.ph); uz = .35; fx = -1.5 + .25 * Math.sin(t * 11 + p.ph); }
       if (st.phone && a === 1){ ux = -1.5; uz = .1; fx = -1.1; }
       if (lie){ ux = a ? -1.0 : -.4; uz = sd * .2; fx = -.4; }
-      const sh = base.clone().multiply(M4(sd * (p.female ? .18 : .2), 1.4, 0, ux, 0, uz));
+      const sh = _sh.multiplyMatrices(base, L4(sd * (p.female ? .18 : .2), 1.4, 0, ux, 0, uz));
       C.upper.setMatrixAt(i * 2 + a, sh);
-      const el = sh.clone().multiply(M4(0, -.3, 0, fx, 0, 0)); C.fore.setMatrixAt(i * 2 + a, el);
-      const hd = el.clone().multiply(new THREE.Matrix4().makeTranslation(0, -.28, 0)); C.hand.setMatrixAt(i * 2 + a, hd);
-      if (a === 1 && st.phone && np < C.list.length){ const ph = hd.clone().multiply(M4(0, -.07, .03, -Math.PI / 2 - ux - fx, 0, 0)); C.phone.setMatrixAt(np, ph); C.screen.setMatrixAt(np, ph.clone().multiply(M4(0, 0, -.0065, 0, Math.PI, 0))); np++; }
+      const el = _el.multiplyMatrices(sh, L4(0, -.3, 0, fx, 0, 0)); C.fore.setMatrixAt(i * 2 + a, el);
+      const hd = _hd.multiplyMatrices(el, _hand); C.hand.setMatrixAt(i * 2 + a, hd);
+      if (a === 1 && st.phone && np < C.list.length){ const ph = _ph.multiplyMatrices(hd, L4(0, -.07, .03, -Math.PI / 2 - ux - fx, 0, 0)); C.phone.setMatrixAt(np, ph); C.screen.setMatrixAt(np, _tmp.multiplyMatrices(ph, L4(0, 0, -.0065, 0, Math.PI, 0))); np++; }
     }
   });
   C.phone.count = C.screen.count = np;

@@ -48,19 +48,22 @@ function audioFeeder(){
     return i;
   } };
 }
-const KEEP_NAME = 'finished-render.mp4', KEEP_META = 'whatif-render-meta';
+const KEEP_NAME = 'finished-render.mp4', KEEP_META = 'whatif-render-meta', CRUMB = 'whatif-render-progress';
+// a breadcrumb every 30 frames; if the tab dies, the next open of the page reports where it stopped
+function crumb(o){ try { if (o) localStorage.setItem(CRUMB, JSON.stringify(o)); else localStorage.removeItem(CRUMB); } catch {} }
+function lastCrash(){ try { const c = JSON.parse(localStorage.getItem(CRUMB) || 'null'); localStorage.removeItem(CRUMB); return c; } catch { return null; } }
 async function openOutput(nVideo, nAudio){
   try {
     if (window.TEST_FORCE_MEMORY || !navigator.storage || !navigator.storage.getDirectory) throw 0;
     const root = await within(navigator.storage.getDirectory(), 8e3), fh = await root.getFileHandle('rendering.mp4', { create: true });
     if (!fh.createWritable) throw 0;
-    const w = await within(fh.createWritable(), 8e3); let err = null, q = Promise.resolve();
-    return { kind: 'disk', target: new StreamTarget({ chunked: true, chunkSize: 4 * 1048576, onData: (data, position) => { q = q.then(() => w.write({ type: 'write', position, data })).catch(e => { err = err || e; }); } }),
-      fastStart: { expectedVideoChunks: nVideo, expectedAudioChunks: nAudio }, error: () => err,
+    const w = await within(fh.createWritable(), 8e3); let err = null, q = Promise.resolve(), queued = 0;
+    return { kind: 'disk', target: new StreamTarget({ chunked: true, chunkSize: 4 * 1048576, onData: (data, position) => { queued += data.byteLength; q = q.then(() => w.write({ type: 'write', position, data })).then(() => { queued -= data.byteLength; }, e => { err = err || e; }); } }),
+      fastStart: { expectedVideoChunks: nVideo, expectedAudioChunks: nAudio }, error: () => err, backlog: () => queued, drain: () => q,
       async finish(){ await q; if (err) throw err; await w.close(); try { await root.removeEntry(KEEP_NAME); } catch {} let fin = fh; try { await fh.move(KEEP_NAME); } catch { fin = fh; }
         const file = await fin.getFile(), name = fin.name; try { localStorage.setItem(KEEP_META, JSON.stringify({ name, size: file.size, at: new Date().toISOString(), build: BUILD })); } catch {} return file; } };
   } catch {
-    return { kind: 'memory', target: new ArrayBufferTarget(), fastStart: 'in-memory', error: () => null, async finish(muxer){ return new Blob([muxer.target.buffer], { type: 'video/mp4' }); } };
+    return { kind: 'memory', target: new ArrayBufferTarget(), fastStart: 'in-memory', error: () => null, backlog: () => 0, drain: () => Promise.resolve(), async finish(muxer){ return new Blob([muxer.target.buffer], { type: 'video/mp4' }); } };
   }
 }
 async function keptRender(){
@@ -72,7 +75,7 @@ async function keptRender(){
   } catch { return null; }
 }
 async function renderAll(){
-  if (busy) return; busy = true; result = null;
+  if (busy) return; busy = true; result = null; window.__result = null; window.__blob = null;
   $('go').disabled = true; $('save').hidden = true; $('done').hidden = true; $('scrub').disabled = true;
   const t0 = performance.now();
   try {
@@ -93,11 +96,13 @@ async function renderAll(){
       if (feed) feed.upTo(muxer, (n + 1) / FPS);
       if (verr) throw verr; if (out.error()) throw out.error();
       while (venc.encodeQueueSize > 6) await yieldNow();
+      if (out.backlog() > 24 * 1048576) await out.drain();
+      if (n % 30 === 0) crumb({ build: BUILD, frame: n, total: NF, at: new Date().toISOString() });
       if (n % 10 === 0 || n === NF - 1){ const el = (performance.now() - t0) / 1e3, per = el / (n + 1);
         $('bar').style.width = ((n + 1) / NF * 100).toFixed(1) + '%'; say('Drawing frame ' + (n + 1).toLocaleString() + ' of ' + NF.toLocaleString() + '  ·  ' + (per * 1e3).toFixed(0) + ' ms a frame  ·  about ' + fmt(per * (NF - n - 1)) + ' left'); await yieldNow(); }
-      if (n && n % 300 === 0) log({ lastFrame: n, msPerFrameSoFar: Math.round((performance.now() - t0) / (n + 1)), jsHeapMB: performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1048576) : null });
+      if (n && n % 150 === 0) log({ lastFrame: n, msPerFrameSoFar: Math.round((performance.now() - t0) / (n + 1)), jsHeapMB: performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1048576) : null });
     }
-    say('Finishing the video…'); await venc.flush(); venc.close(); if (verr) throw verr;
+    crumb(null); say('Finishing the video…'); await venc.flush(); venc.close(); if (verr) throw verr;
     let aN = 0; if (feed) try { aN = feed.upTo(muxer, Infinity); } catch (e){ aErr = String(e && e.message || e); }
     muxer.finalize(); say('Writing the file…');
     const blob = await out.finish(muxer), secs = (performance.now() - t0) / 1e3;
@@ -106,7 +111,7 @@ async function renderAll(){
     say('Done in ' + fmt(secs) + '. ' + mb.toFixed(1) + ' MB, ' + (aErr ? 'WITHOUT sound (' + aErr + ')' : 'with sound') + '.'); $('bar').style.width = '100%';
     log({ status: 'done', seconds: Math.round(secs), msPerFrame: Math.round(secs * 1e3 / NF), sizeMB: +mb.toFixed(1), audio: !aErr, audioFrames: aN, audioError: aErr, output: out.kind });
     await offerSave(out.kind === 'disk');
-  } catch (e){ say('Stopped: ' + (e && e.message ? e.message : e)); log({ status: 'error', error: String(e && e.stack || e).slice(0, 1500) }); }
+  } catch (e){ crumb(null); say('Stopped: ' + (e && e.message ? e.message : e)); log({ status: 'error', error: String(e && e.stack || e).slice(0, 1500) }); }
   busy = false; $('go').disabled = false; $('scrub').disabled = false;
 }
 async function offerSave(kept, at){
@@ -133,6 +138,9 @@ async function saveIt(){
     $('gpu').textContent = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
     window.__stage = 'drawing the first frame'; window.renderFrame(0);
     $('go').disabled = false; $('scrub').disabled = false; say('Ready. Rendering takes a few minutes; keep this window open until it finishes.');
+    const dead = lastCrash();
+    if (dead){ window.__crash = dead; say('The last render stopped at frame ' + dead.frame + ' of ' + dead.total + ' (the tab closed or crashed). Close other tabs, then press Render again.');
+      useCap('db').then(d => d && d.collection('renders').doc().set({ at: new Date().toISOString(), reel: LABEL, build: BUILD, status: 'crashed earlier', crashedRunBuild: dead.build, crashedAtFrame: dead.frame, crashedAt: dead.at, ua: navigator.userAgent })).catch(() => {}); }
     window.__bootOK && window.__bootOK($('gpu').textContent);
     const kept = await keptRender(); if (kept && !busy){ result = kept.file; await offerSave(true, kept.at); }
   } catch (e){ window.__bootFail ? window.__bootFail(e && e.message ? e.message : String(e)) : say('Could not start: ' + (e && e.message ? e.message : e)); }
