@@ -2,7 +2,15 @@
 
 Still reel: one locked camera on the TKTS red steps in Times Square, about 1:35. The temperature climbs from a normal 22 °C to 60 °C and every step shows an effect: the crowd thins, people faint and are helped, the city breaks down. Then a storm breaks the heat, the rain boils off the road, and the square comes back to frame 0 (loop).
 
-**Status:** test frames for approval. Sound (`audio.py`) and the GPU renderer page come after Varshith approves the stills.
+**Status:** renderer page published ("#11 Renderer", https://claude.ai/artifact/1tYkrWYX4nY22tESqGJpu4); waiting for the GPU render.
+
+## Re-render (GPU renderer page)
+```
+npm i                                   # three, mp4-muxer, esbuild, @fontsource/tinos (see package.json)
+TRIM=5.5 python audio.py                # audio.wav, about -14.3 LUFS
+python build_renderer.py . 11-renderer.html "#11 - What if your city hit 60 °C?"
+```
+Publish `11-renderer.html` as an artifact with capabilities `{db: {}, downloads: true}`, open it in the Claude app, press Render, then Save. The page logs opens to `boots` and runs to `renders`.
 
 ## Files
 - `timeline.json`: the script. Temperature curve (`temp`), survival estimates (`survival`, hours by °C), crowd / traffic / screens curves, storm and steam, named `beats` (times of every on-screen event), ticker messages, captions, counters, end card.
@@ -11,6 +19,8 @@ Still reel: one locked camera on the TKTS red steps in Times Square, about 1:35.
 - `src/util.js`: shared helpers.
 - `reel.html`: loads three.js from `node_modules` via an import map.
 - `render.py`, `sheet.sh`: cloud test frames only.
+- `audio.py`: procedural sound on the same timeline (writes `audio.wav`).
+- `renderer.js`, `build_renderer.py`: the GPU renderer page (WebCodecs H.264 at 14 Mbps, pre-encoded AAC copied into the MP4).
 
 ## Test frames
 ```
