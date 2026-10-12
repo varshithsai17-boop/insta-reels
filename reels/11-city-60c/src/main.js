@@ -265,7 +265,8 @@ const plane = new THREE.Group(); scene.add(plane);
 // pigeons on the lamp arm
 const PIGEONS = [];
 { const grey = STD('#7d8088', .8), dark = STD('#4a4d55', .8);
-  for (let i = 0; i < 5; i++){ const p = new THREE.Group(); const b = mesh(sph(.13, 10, 8), grey, 0, 0, 0, p, 1); b.scale.set(.8, .75, 1.3); mesh(sph(.07, 8, 6), dark, 0, .11, .12, p, 1); mesh(box(.06, .02, .2), dark, 0, -.02, -.2, p); p.position.set(PIGEON_POLE.x - .3 - i * .38, 9.2, PIGEON_POLE.z); p.rotation.y = (i % 2 ? .4 : -.3) + Math.PI / 2; scene.add(p); PIGEONS.push({ g: p, x0: p.position.x, ph: hash(i + 2), d: i * .45 }); } }
+  for (let i = 0; i < 5; i++){ const p = new THREE.Group(); const b = mesh(sph(.13, 10, 8), grey, 0, 0, 0, p, 1); b.scale.set(.8, .75, 1.3); mesh(sph(.07, 8, 6), dark, 0, .11, .12, p, 1); mesh(box(.06, .02, .2), dark, 0, -.02, -.2, p);
+    const a = .3 + i * 1.25, r = .62; const x = ICE.x + Math.sin(a) * r, z = ICE.z + Math.cos(a) * r; p.position.set(x, 3.08 - .36 * r / 1.15 + .1, z); p.rotation.y = a; scene.add(p); PIGEONS.push({ g: p, x0: x, z0: z, y0: p.position.y, a, d: i * .5 }); } }
 
 // ---------- smoke / steam sprites ----------
 function puffSet(n, c){ return Array.from({ length: n }, (_, i) => { const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: puffTex, color: c, transparent: true, depthWrite: false, opacity: 0 })); s.visible = false; scene.add(s); return { s, r: hash(i * 3.7 + n), r2: hash(i * 7.1 + 3), r3: hash(i * 1.3 + 9) }; }); }
@@ -278,8 +279,8 @@ const PANTS = ['#2f3b52', '#3a3f4a', '#8a7a5c', '#1f2228', '#5a5a60', '#4a5d7a',
 const CROWD = [];
 { const r = rng(314);
   const add = (x, z, o = {}) => { const female = r() < .5; CROWD.push(Object.assign({ x, z, dir: 0, sp: 0, female, s: (female ? .93 : 1) * (.95 + r() * .1), rank: r(), ph: r() * 6.3, yaw: (r() - .5) * 2, shirt: SHIRTS[(r() * SHIRTS.length) | 0], pant: PANTS[(r() * PANTS.length) | 0], skin: SKIN[(r() * SKIN.length) | 0], hair: HAIRC[(r() * 7) | 0], hs: female ? (r() < .6 ? 'long' : r() < .5 ? 'bun' : 'short') : (r() < .25 ? 'reced' : 'short'), tee: r() < .8, phone: r() < .3, fan: r() < .35, lie: 0 }, o)); };
-  const CLEAR = [[.9, -8.8], [1.9, -8.2], [-.1, -9.3], [1.9, -9.8], [-.6, -12.2], [.1, -12.6], [5.4, -13.5], [2.2, -17], [-2.3, -5.4], [3.0, -5.0], [1.55, -5.2], [.9, -4.1], [-2.0, -9.2], [-1.6, -7.5], [-1.4, -6.6], [-.7, -3.4], [-.1, -3.9], [6.6, -25], [6.6, -27.5], [-3, -11.5], [3.4, -13.8], [4.0, -14.2]];
-  const clear = (x, z) => CLEAR.every(([cx, cz]) => Math.hypot(x - cx, z - cz) > 1.7);
+  const CLEAR = [[.9, -8.8], [1.9, -8.2], [-.45, -9.35], [.95, -9.65], [-.35, -7.45], [-.6, -12.2], [.1, -12.6], [5.4, -13.5], [2.2, -17], [-2.3, -5.4], [3.0, -5.0], [1.55, -5.2], [.9, -4.1], [-2.0, -9.2], [-1.6, -7.5], [-1.4, -6.6], [-.7, -3.4], [-.1, -3.9], [6.6, -25], [6.6, -27.5], [-3, -11.5], [3.4, -13.8], [4.0, -14.2]];
+  const clear = (x, z) => CLEAR.every(([cx, cz]) => Math.hypot(x - cx, z - cz) > 1.7) && !(x > -1.2 && x < 3.4 && z > -11 && z < -2.5) && !(x > 2 && x < 5 && z > -9 && z < -2.5);
   for (let i = 0; i < 260; i++){
     const walker = r() < .42;
     if (walker){ add(8.6 + r() * 15, -4 - r() * 224, { dir: r() < .5 ? 1 : -1, sp: 1.1 + r() * .4 }); continue; }
@@ -308,9 +309,9 @@ hero('f3', tee('#5b8f5a', '#3a3f4a', SKIN[5], HAIRC[7]), 2.2, -17.0, .3);
 hero('vendor', tee('#e8e4da', '#3a3f4a', SKIN[2], HAIRC[0], { cap: '#c0533c' }), CART.x - 1.45, CART.z - .2, 1.1);
 hero('witness', tee('#3d6fa3', '#2f3b52', SKIN[6], HAIRC[2]), CART.x + 1.4, CART.z - .2, -1.2);
 hero('iceman', tee('#f2efe6', '#3a3f4a', SKIN[3], HAIRC[0], { cap: '#ff8fb6' }), ICE.x - .1, ICE.z - .9, .25);
-hero('seller', tee('#f08a4b', '#2f3b52', SKIN[5], HAIRC[0], { cap: '#222831' }), COOLER.x + .6, COOLER.z - .5, -.4);
-hero('medic1', { jacket: '#1d2a44', shirt: '#1d2a44', pants: '#1d2a44', skin: SKIN[2], hair: HAIRC[1], tee: true, open: true, stripe: '#d8d36a' }, -.1, -9.3, 1.2);
-hero('medic2', { jacket: '#1d2a44', shirt: '#1d2a44', pants: '#1d2a44', skin: SKIN[6], hair: HAIRC[0], tee: true, open: true, stripe: '#d8d36a', female: true, hairStyle: 'bun' }, 1.9, -9.8, -1.0);
+hero('seller', tee('#f08a4b', '#2f3b52', SKIN[5], HAIRC[0], { cap: '#222831' }), COOLER.x - .75, COOLER.z - .3, .5);
+hero('medic1', { jacket: '#1d2a44', shirt: '#1d2a44', pants: '#1d2a44', skin: SKIN[2], hair: HAIRC[1], tee: true, open: true, stripe: '#d8d36a' }, -.45, -9.35, .5);
+hero('medic2', { jacket: '#1d2a44', shirt: '#1d2a44', pants: '#1d2a44', skin: SKIN[6], hair: HAIRC[0], tee: true, open: true, stripe: '#d8d36a', female: true, hairStyle: 'bun' }, .95, -9.65, -.6);
 hero('walkA', tee('#a33b3b', '#2f3b52', SKIN[2], HAIRC[2]), 3.5, -16, Math.PI);
 hero('walkB', tee('#e1b74a', '#3a3f4a', SKIN[8], HAIRC[0], { female: true, hairStyle: 'long' }), 4.2, -16.4, Math.PI);
 // ice cream line
@@ -382,7 +383,7 @@ function updateWorld(t){
   const st = kf(TL.steam, t);
   STEAM.forEach((p, i) => { p.s.visible = st > .01; if (!p.s.visible) return; const age = ((t - B.steamUp) * .45 + p.r) % 1; const x = lerp(-17, 22, p.r2), z = -6 - p.r3 * 90; p.s.position.set(x + age * 1.5, .3 + age * 5, z); p.s.scale.setScalar(2.5 + age * 7 + p.r3 * 5); p.s.material.opacity = st * (1 - age) * .5; });
   // pigeons fall one by one
-  PIGEONS.forEach(p => { const k = clamp((t - B.pigeons - p.d) / .9, 0, 1) * (t < B.return ? 1 : 0); const fall = k * k; p.g.position.set(p.x0 - k * .4, lerp(9.2, .32, fall), PIGEON_POLE.z + k * .3); p.g.rotation.z = k * 1.4; p.g.visible = !(t > B.return); });
+  PIGEONS.forEach(p => { const k = clamp((t - B.pigeons - p.d) / .7, 0, 1) * (t < B.return ? 1 : 0); const fall = k * k, out = .55 + k * .5; p.g.position.set(ICE.x + Math.sin(p.a) * out, lerp(p.y0, .24, fall), ICE.z + Math.cos(p.a) * out); p.g.rotation.set(0, p.a, k * 1.5); p.g.visible = true; });
   // plane: crosses the sky window, then banks and turns away
   const pk = (t - B.plane) / 6; plane.visible = pk > 0 && pk < 1;
   if (plane.visible){ const turn = smooth((pk - .35) / .5); const a = lerp(-.2, -1.6, turn); plane.position.set(lerp(30, 150, pk) + turn * 60, 350 + pk * 15, -1200 - turn * 700); plane.rotation.set(0, Math.PI / 2 + a, -turn * .55); }
@@ -454,7 +455,7 @@ function updatePeople(t){
   // the woman who helps him, then steps back for the medics
   { const g = C.help; const track = [[0, 'phone'], [B.faint1 + .2, 'stand', .3], [B.help1, 'kneel', .6], [B.medics, 'stand', .7], [B.medics + .8, 'holdHead', .6]];
     show(g, t < B.stretcher + 2 || back); setPose(g, back ? POSE.phone : poseAt(track, t));
-    if (t > B.help1 - .3 && t < B.medics + .5){ g.position.set(1.6, .14, -8.3); g.rotation.y = 2.4; } else if (t >= B.medics + .5){ g.position.set(2.8, .14, -7.4); g.rotation.y = -1.4; } else { g.position.copy(g.userData.home); g.rotation.y = g.userData.yaw0; } }
+    if (t > B.help1 - .3 && t < B.medics + .5){ g.position.set(-.35, .14, -7.45); g.rotation.y = 3.0; } else if (t >= B.medics + .5){ g.position.set(2.8, .14, -7.4); g.rotation.y = -1.4; } else { g.position.copy(g.userData.home); g.rotation.y = g.userData.yaw0; } }
   // medics
   for (const [k, name] of [[0, 'medic1'], [1, 'medic2']]){ const g = C[name]; const on = t > B.medics - 1.2 && t < B.ambOut;
     show(g, on); if (!on) continue;
@@ -489,11 +490,11 @@ function updatePeople(t){
     if (wOn){ const k = clamp((t - (B.witness - 1.5)) / 1.4, 0, 1); w.position.set(lerp(CART.x - 1.2, CART.x - 2.1, ease(k)), .14, lerp(CART.z - 5, CART.z + .9, ease(k))); w.rotation.y = k < 1 ? -.1 : 2.6; setPose(w, k < 1 ? walkLegs(Object.assign({}, POSE.stand), t * 7, 1) : POSE.kneel); }
     else if (back){ w.visible = false; } }
   // ice cream man and his line (they leave as it gets hot)
-  { const on = (t > B.iceLine - .5 && t < 26) || back; LINE.forEach((g, i) => { show(g, on && (t < 22 - i * .9 || back)); setPose(g, i === 0 ? POSE.phone : POSE.stand); }); show(C.iceman, t < 40 || back); setPose(C.iceman, t > 30 && !back ? POSE.brow : POSE.stand); }
+  { const on = t > B.iceLine - .5 && t < 26; LINE.forEach((g, i) => { show(g, on && t < 22 - i * .9); setPose(g, i === 0 ? POSE.phone : POSE.stand); }); show(C.iceman, t < 40 || back); setPose(C.iceman, t > 30 && !back ? POSE.brow : POSE.stand); }
   // water seller
-  { const g = C.seller; show(g, (t > B.water - .4 && t < 44) || back); coolerG.visible = (t > B.water - .4 && t < 44) || back; setPose(g, poseAt([[0, 'stand'], [B.water, 'drink', .5]], t)); g.userData.arms[1].sh.rotation.x = -2.5 + .15 * Math.sin(t * 5); }
+  { const g = C.seller; show(g, t > B.water - .4 && t < 44); coolerG.visible = t > B.water - .4 && t < 44; setPose(g, poseAt([[0, 'stand'], [B.water, 'drink', .5]], t)); g.userData.arms[1].sh.rotation.x = -2.5 + .15 * Math.sin(t * 5); }
   // people on the steps fan themselves, then leave
-  SITTERS.forEach(({ g, i, fan }) => { const leave = 29 + i * .7; const on = (t > B.stepsSit - 1 + i * .25 && t < leave) || back; show(g, on); let p = fan && t > B.stepsSit ? POSE.sitStepFan : POSE.sitStep; if (fan && t > B.stepsSit){ p = Object.assign({}, p, { aR: [p.aR[0], p.aR[1] + .1 * Math.sin(t * 10 + i), p.aR[2] + .35 * Math.sin(t * 12 + i)] }); } setPose(g, p); });
+  SITTERS.forEach(({ g, i, fan }) => { const leave = 29 + i * .7; const on = t > B.stepsSit - 1 + i * .25 && t < leave; show(g, on); let p = fan && t > B.stepsSit ? POSE.sitStepFan : POSE.sitStep; if (fan && t > B.stepsSit){ p = Object.assign({}, p, { aR: [p.aR[0], p.aR[1] + .1 * Math.sin(t * 10 + i), p.aR[2] + .35 * Math.sin(t * 12 + i)] }); } setPose(g, p); });
   // the last two walk into the subway
   { const on = t > B.subwayWalk - 1 && t < B.subwayWalk + 6; for (const [k, name] of [[0, 'walkA'], [1, 'walkB']]){ const g = C[name]; show(g, on || back); if (!on){ setPose(g, POSE.stand); g.position.copy(g.userData.home); continue; }
       const s = clamp((t - (B.subwayWalk - 1)) / 5, 0, 1); const from = V(3.0 + k * .6, .14, -13.8), to = V(SUBWAY.x - .3 + k * .6, .14, SUBWAY.z - 3.8);
