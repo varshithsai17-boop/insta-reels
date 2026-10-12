@@ -1,0 +1,12 @@
+*.mp4
+*.mov
+*.mkv
+*.wav
+*.mp3
+*.zip
+_claude_analysis/work/**
+!_claude_analysis/work/**/
+!_claude_analysis/work/**/*.txt
+*.tar
+*.bin
+*.part*
