@@ -10,3 +10,4 @@ _claude_analysis/work/**
 *.tar
 *.bin
 *.part*
+!*source.zip
