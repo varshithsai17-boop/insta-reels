@@ -2,18 +2,27 @@
 
 Instagram "Reel insights", copied from Varshith's screenshots. Numbers are a snapshot at the time noted; rates are Instagram's own (per viewer). Retention points are read off the chart by eye, so treat them as approximate.
 
+"Higher"/"Lower" are Instagram's comparison with his typical reel at that time, and that baseline moved a lot as the account grew (Voyager's 3.5% like rate is "higher", the dog reel's 5.1% is "lower"), so compare the raw numbers across reels, not the labels.
+
 Numbering follows the Post Bank (posting order). Note: the renderer pages still say "#06 Renderer" for All humans disappeared and "#07 Renderer" for Voyager 1.
 
 ## Summary table
 
 | # | Reel | Length | Snapshot | Views | Viewers | Views/viewer | Avg watch | Avg watch % | Skip rate | Likes | Comments | Reposts | Shares | Saves | Follows | Follows per 1k views |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 06 | What if you were Voyager 1? | 1:36 | 14 Oct 10:52 | 17,252 | 13,402 | 1.29 | 27 s | 28% | 45.1% | 478 | 2 | 10 | 25 | 90 | 34 | 2.0 |
 | 07 | What if all humans disappeared? | 1:36 | 14 Oct 10:51 | 223,699 | 178,330 | 1.25 | 43 s | 45% | 28.1% | 11.7K | 100 | 300 | 446 | 924 | 477 | 2.1 |
 | 08 | What if you were the President in a nuclear emergency? | 1:20 | 14 Oct 10:51 | 1,283,606 | 848,907 | 1.51 | 48 s | 60% | 22.9% | 54.9K | 513 | 874 | 3.2K | 6.5K | 2,303 | 1.8 |
 | 09 | What if you were Michael Jackson? | 1:35 | 14 Oct 10:52 | 14,118 | 11,624 | 1.21 | 28 s | 29% | 26.4% | 590 | 9 | 29 | 63 | 72 | 53 | 3.8 |
 | 12 | What if your dog lived forever? | 1:35 | 14 Oct 10:51 | 6,813 | 5,334 | 1.28 | 26 s | 27% | 39.8% | 275 | 4 | 13 | 30 | 28 | 9 | 1.3 |
 
 ## Per reel
+
+### #06 — What if you were Voyager 1?
+- Format: POV ("you" are the probe); opens on the rocket on the launch pad in daylight, caption "5 September 1977. You're on top of this." Timeline bar of years 1977 → … → 40,000 YRS.
+- Rates vs his typical reel: skip 45.1% (higher, bad) · share 0.2% (lower) · like 3.5% (higher) · save 0.7% (higher) · repost 0.1% (lower) · comment 0.0% (lower).
+- Retention and sources: not sent.
+- Views curve: about 17K two days in, about double his typical reel at the time.
 
 ### #07 — What if all humans disappeared?
 - Format: still camera, city street at dusk (Shibuya-style crossing), time jumps NOW → 2 DAYS → 1 YEAR → … → 10,000 YEARS.
