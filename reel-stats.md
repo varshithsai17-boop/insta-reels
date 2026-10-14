@@ -59,3 +59,39 @@ Numbering follows the Post Bank (posting order). Note: the renderer pages still 
 - Retention: falls to about 50% within ~3 s and about 38% by ~8 s, then flat around 30% through the middle, slides to about 10% at the end.
 - Sources: Profile 42.3% · Reels tab 39.5% · Feed 12.9% · Explore 4.6%. Most views came from people visiting the profile, not from the algorithm.
 - Views curve: about 6.5K a day in, below his typical reel (the typical line reaches about 13K by day two).
+
+## Analysis (14 Oct, 6 of the 11 posted reels)
+
+Total views across the six: 1,558,559. #08 President alone is 82% of that, #07 All humans 14%, the other four together 3%.
+
+| Reel | Type of content | Opens on | Skip | ~Left at 10 s | Avg watch % | Views |
+|---|---|---|---|---|---|---|
+| #08 President | You, in a crisis, with a clock | An agent grabs you mid-speech: missiles coming, under 10 min to decide | 22.9% | ~70% | 60% | 1,283,606 |
+| #07 All humans | World-scale catastrophe | Everyone already gone, 8,200,000,000 counter | 28.1% | ~60% | 45% | 223,699 |
+| #06 Voyager 1 | Journey / biography of an object | Rocket sitting on the pad, "5 September 1977" | 45.1% | n/a | 28% | 17,252 |
+| #09 Michael Jackson | Celebrity biography | Stadium crowd, mid-lean, then rewinds to 1958 | 26.4% | ~50% | 29% | 14,118 |
+| #11 City 100 °C | World-scale catastrophe, slow build | A normal 22 °C afternoon | 37.6% | ~50% | 44% | 13,071 |
+| #12 Dog | Emotional / pet | A quiet hallway homecoming | 39.8% | ~38% | 27% | 6,813 |
+
+What works:
+1. The danger is already happening in frame 0. Both winners open mid-disaster; every reel that opens calm (rocket on the pad, normal afternoon, hallway) has a 38–45% skip rate.
+2. Stakes for you or for everyone, with a clock. "You" alone is not enough (Voyager, MJ are "you" and flopped); "you" plus danger plus minutes to decide is what hit.
+3. Real hidden systems people wonder about (nuclear football, Air Force One, the Beast; life after people).
+4. Shorter. #08 is the only reel under 1:33 (1:20) and has the best average watch (60%) and the most rewatches (1.51 views per viewer vs 1.2–1.3).
+
+What doesn't:
+- Biographies and journeys (MJ, Voyager): no threat, so nothing pulls you to the next beat. MJ's opening held (26% skip) but half the viewers left by ~10 s, right where it rewinds to 1958.
+- Soft emotional (dog): weakest start and lowest reach.
+- Slow builds (city 100 °C): the people who stay, stay (flattest middle after #08), but 38% skip the calm opening.
+- Long cool-downs: once the climax resolves, people leave (#11 drops from ~40% to ~8% over the last ~13 s).
+
+Other notes:
+- Format (Still vs Moving) doesn't decide it: one winner is each.
+- Follows track reach: 1.3–3.8 per 1,000 views on every reel. Reach is what matters.
+- #09, #12 and #11 got 48%, 42% and 16% of their views from the profile, i.e. people arriving from #08. Instagram didn't push them; the new followers came for crisis content.
+
+Caveats: #01–#05 are not in yet; #11 and #12 were about a day old (#08 broke out on day 2); one viral hit dominates the sample; Instagram's "higher/lower" labels compare against a moving baseline.
+
+Upcoming ideas against this pattern:
+- Best fits: Chernobyl night shift, Titanic lookout (open on the iceberg, not the calm sea), Houdini water torture cell, coin-sized black hole, flying dinosaur when the asteroid hit, gladiator, Pompeii baker (open on the ash column, not the calm dawn), all ice melted.
+- Weak fits (biography / journey / no danger): Freddie Mercury at Live Aid, Leonardo and the Mona Lisa, Great Pyramid, Arctic tern, #10 Kardashev. Chris Rock is a celebrity POV but has tension at frame 0, so it's in between.
