@@ -14,6 +14,7 @@ Numbering follows the Post Bank (posting order). Note: the renderer pages still 
 | 07 | What if all humans disappeared? | 1:36 | 14 Oct 10:51 | 223,699 | 178,330 | 1.25 | 43 s | 45% | 28.1% | 11.7K | 100 | 300 | 446 | 924 | 477 | 2.1 |
 | 08 | What if you were the President in a nuclear emergency? | 1:20 | 14 Oct 10:51 | 1,283,606 | 848,907 | 1.51 | 48 s | 60% | 22.9% | 54.9K | 513 | 874 | 3.2K | 6.5K | 2,303 | 1.8 |
 | 09 | What if you were Michael Jackson? | 1:35 | 14 Oct 10:52 | 14,118 | 11,624 | 1.21 | 28 s | 29% | 26.4% | 590 | 9 | 29 | 63 | 72 | 53 | 3.8 |
+| 11 | What if your city hit 100 °C? | 1:33 | 14 Oct 10:53 | 13,071 | 10,235 | 1.28 | 41 s | 44% | 37.6% | 377 | 8 | 11 | 45 | 57 | 31 | 2.4 |
 | 12 | What if your dog lived forever? | 1:35 | 14 Oct 10:51 | 6,813 | 5,334 | 1.28 | 26 s | 27% | 39.8% | 275 | 4 | 13 | 30 | 28 | 9 | 1.3 |
 
 ## Per reel
@@ -44,6 +45,13 @@ Numbering follows the Post Bank (posting order). Note: the renderer pages still 
 - Retention: no 3-second cliff, but a steady bleed: about 65% at ~5 s, about 50% by ~10 s, about 30% by ~30 s, flat around 25% through the middle, about 20% near the end, ends near 8%.
 - Sources: Profile 48.0% · Reels tab 38.8% · Feed 6.9% · Explore 5.7% · Stories 0.1%.
 - Views curve: about 14K two days in, a little above his typical reel.
+
+### #11 — What if your city hit 100 °C?
+- Format: still camera on a busy Times Square-style street at midday (billboards, crowd, hot-dog cart, umbrellas); temperature timeline across the top. Posted 13 Oct, Instagram only.
+- Rates vs his typical reel: skip 37.6% (higher, bad) · share 0.5% (lower) · like 3.8% (lower) · save 0.6% (lower) · repost 0.1% (lower) · comment 0.1% (higher).
+- Retention: falls to about 60% by ~5 s and about 50% by ~10 s, then the flattest middle after #08 (about 48% sliding to about 40% at ~1:20), then a sharp drop over the last ~12 s (end card) to about 8%.
+- Sources: Reels tab 65.9% · Profile 16.4% · Explore 11.3% · Feed 6.2%.
+- Views curve: about 11K within the first day, above his typical reel at the same point.
 
 ### #12 — What if your dog lived forever?
 - Format: still camera inside a house; opens on a man at the front door holding the dog, caption "Every dog owner has said it once." Timeline bar DAY 1 → 15 YEARS → 80 YEARS → 200 YEARS → FOREVER.
