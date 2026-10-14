@@ -95,3 +95,5 @@ Caveats: #01–#05 are not in yet; #11 and #12 were about a day old (#08 broke o
 Upcoming ideas against this pattern:
 - Best fits: Chernobyl night shift, Titanic lookout (open on the iceberg, not the calm sea), Houdini water torture cell, coin-sized black hole, flying dinosaur when the asteroid hit, gladiator, Pompeii baker (open on the ash column, not the calm dawn), all ice melted.
 - Weak fits (biography / journey / no danger): Freddie Mercury at Live Aid, Leonardo and the Mona Lisa, Great Pyramid, Arctic tern, #10 Kardashev. Chris Rock is a celebrity POV but has tension at frame 0, so it's in between.
+
+From Varshith (14 Oct): most #08 comments were either jokes about Trump (viewers reading the unnamed President as the current one) or people debating what they would do. So the comment fuel is (a) a powerful role whose current holder people already have opinions about, left unnamed, and (b) an open choice at the end ("What would you do?", cut to black, no answer).
